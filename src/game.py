@@ -46,7 +46,7 @@ class Game(arcade.Window):
                         self.add_game_object(DestructibleBlock(x, y))
 
                         if random.randint(0, 20) == 1:
-                            self.add_game_object(Item(x, y))
+                            self.add_game_object(Item(self, x, y))
 
         # Add background with shadow
         for y, line in enumerate(map_objects):

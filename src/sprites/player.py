@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import arcade
 
-from src.sprites.bombs import Bomb
+from src.sprites.bombs import Bomb, BombExplosion
 from src.sprites.items import Item
 from src.animation import Animation
 from src.constants import *
@@ -19,8 +19,13 @@ class Player(arcade.Sprite):
         self.game = game
         self.animation = Animation()
         self.bombs_limit = 1
+        self.bombs_quantity = 0
         self.bomb_explosion_range = 1
         self.spawn_bomb_timer = 400
+        self.is_dead = False
+        self.lifes = 3
+        self.limit_invulnerable_timer = 1500
+        self.invulnerable_timer = self.limit_invulnerable_timer
 
         # Horizontal walking/idle animations
         self.animation.add_state(
@@ -98,13 +103,31 @@ class Player(arcade.Sprite):
             ]
         )
 
+    def take_damage(self):
+        if self.lifes == 1 and self.invulnerable_timer == self.limit_invulnerable_timer:
+            self.die()
+        elif self.lifes > 0 and self.invulnerable_timer == self.limit_invulnerable_timer:
+            self.lifes -= 1
+            self.invulnerable_timer -= 1
+
     def die(self):
-        self.animation.play("die")
+        if not self.is_dead:
+            self.animation.play("die")
+            self.is_dead = True
 
     def get_map_position(self):
         return int((self.center_x - 5) / 48), int((self.center_y - 5) / 48)
 
     def on_update(self, delta_time: float, keys_pressed: set = ()):
+        if self.collides_with_list(self.game.get_game_objects_by_type(BombExplosion)):
+            self.take_damage()
+
+        self.animation.update(delta_time)
+        self.texture = self.animation.get_current_texture()
+
+        if self.is_dead:
+            return
+
         self.spawn_bomb_timer += delta_time * 1000
 
         if "RIGHT" in keys_pressed:
@@ -127,12 +150,16 @@ class Player(arcade.Sprite):
         elif "UP" in keys_pressed and "DOWN" in keys_pressed:
             self.change_y = 0
 
-        if "SPACE" in keys_pressed and self.spawn_bomb_timer >= 400:
-            if not self.game.get_game_object(*self.get_map_position(), Bomb):
-                self.game.add_game_object(
-                    Bomb(self.game, *self.get_map_position(), self.bomb_explosion_range)
-                )
-                self.spawn_bomb_timer = 0
+        if (
+            "SPACE" in keys_pressed
+            and self.spawn_bomb_timer >= 400
+            and not self.game.get_game_object(*self.get_map_position(), Bomb)
+            and len(self.game.get_game_objects_by_type(Bomb)) < self.bombs_limit
+        ):
+            self.game.add_game_object(
+                Bomb(self.game, *self.get_map_position(), self.bomb_explosion_range)
+            )
+            self.spawn_bomb_timer = 0
 
         if self.velocity[0] > 0:
             self.animation.play("walk_right")
@@ -150,5 +177,14 @@ class Player(arcade.Sprite):
         for item in items:
             item.upgrade(self)
 
-        self.animation.update(delta_time)
-        self.texture = self.animation.get_current_texture()
+        if self.invulnerable_timer != self.limit_invulnerable_timer:
+            self.invulnerable_timer -= delta_time * 1000
+
+            if int(self.invulnerable_timer) // 100 % 2 == 0:
+                self.alpha = 80
+            else:
+                self.alpha = 255
+
+            if self.invulnerable_timer <= 0:
+                self.invulnerable_timer = self.limit_invulnerable_timer
+                self.alpha = 255
