@@ -26,6 +26,7 @@ class Player(arcade.Sprite):
         self.lifes = 3
         self.limit_invulnerable_timer = 1500
         self.invulnerable_timer = self.limit_invulnerable_timer
+        self.movement_speed = 3
 
         # Horizontal walking/idle animations
         self.animation.add_state(
@@ -131,9 +132,9 @@ class Player(arcade.Sprite):
         self.spawn_bomb_timer += delta_time * 1000
 
         if "RIGHT" in keys_pressed:
-            self.change_x = MOVEMENT_SPEED
+            self.change_x = self.movement_speed
         if "LEFT" in keys_pressed:
-            self.change_x = -MOVEMENT_SPEED
+            self.change_x = -self.movement_speed
 
         if "RIGHT" not in keys_pressed and "LEFT" not in keys_pressed:
             self.change_x = 0
@@ -141,9 +142,9 @@ class Player(arcade.Sprite):
             self.change_x = 0
 
         if "UP" in keys_pressed:
-            self.change_y = MOVEMENT_SPEED
+            self.change_y = self.movement_speed
         if "DOWN" in keys_pressed:
-            self.change_y = -MOVEMENT_SPEED
+            self.change_y = -self.movement_speed
 
         if "UP" not in keys_pressed and "DOWN" not in keys_pressed:
             self.change_y = 0

@@ -2,7 +2,7 @@ import arcade
 import random
 
 from src.sprites.bombs import Bomb, BombExplosion
-from src.sprites.items import Item
+from src.sprites.items import Item, ItemBlastRadius, ItemExtraBomb, ItemSpeedIncrease
 from src.sprites.player import Player
 from src.sprites.blocks import Block, DestructibleBlock, BlockDestroy, Ground
 from src.constants import *
@@ -45,8 +45,14 @@ class Game(arcade.Window):
                     ):
                         self.add_game_object(DestructibleBlock(x, y))
 
-                        if random.randint(0, 20) == 1:
-                            self.add_game_object(Item(self, x, y))
+                        random_item = random.randint(0, 20)
+
+                        if random_item == 1:
+                            self.add_game_object(ItemBlastRadius(self, x, y))
+                        if random_item == 2:
+                            self.add_game_object(ItemExtraBomb(self, x, y))
+                        if random_item == 3:
+                            self.add_game_object(ItemSpeedIncrease(self, x, y))
 
         # Add background with shadow
         for y, line in enumerate(map_objects):
